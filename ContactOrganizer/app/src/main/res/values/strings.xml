@@ -1,0 +1,12 @@
+<resources>
+    <string name="app_name">ContactOrganizer</string>
+
+    <string name="hello_world">Hello world!</string>
+    <string name="action_settings">Settings</string>
+    <string name="ContactCreator">Contact Creator</string>
+    <string name="personName">Person Name</string>
+    <string name="phoneNo">Phone no</string>
+    <string name="emailId">Email Id</string>
+    <string name="address">Address</string>
+    <string name="addContact">Add contact</string>
+</resources>
