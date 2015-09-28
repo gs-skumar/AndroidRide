@@ -1,15 +1,16 @@
 package com.dc.sandeep.contactorganizer;
 
 import android.content.Intent;
+import android.net.Uri;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Adapter;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
@@ -20,7 +21,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.dc.sandeep.contactorganizer.com.dc.beans.contact.ContactDetail;
-import com.dc.sandeep.contactorganizer.com.dc.beans.contact.TestAbcd;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,12 +31,12 @@ public class MainActivity extends AppCompatActivity {
     List<ContactDetail> contactDetailsList = new ArrayList<>();
     ListView contactListView;
     ImageView contactImage;
+    Uri imageUri;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        TestAbcd testAbcd = new TestAbcd();
         nametxt = (EditText)findViewById(R.id.pName);
         emailTxt = (EditText)findViewById(R.id.emailId);
         phoneTxt = (EditText)findViewById(R.id.phoneNo);
@@ -60,7 +60,7 @@ public class MainActivity extends AppCompatActivity {
         addContact.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                addContact(nametxt.getText().toString(),phoneTxt.getText().toString(),emailTxt.getText().toString(),addressTxt.getText().toString());
+                addContact(nametxt.getText().toString(),phoneTxt.getText().toString(),emailTxt.getText().toString(),addressTxt.getText().toString(),imageUri);
                 populateListView();
                 Toast.makeText(getApplicationContext(),"Contact has been created!",Toast.LENGTH_SHORT).show();
             }
@@ -95,8 +95,10 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void onActivityResult(int reqCode,int resCode,Intent data){
-        if(reqCode == RESULT_OK){
-            if(resCode == 1){
+        if(resCode == RESULT_OK){
+            if(reqCode == 1){
+                imageUri = (Uri)data.getData();
+                Log.d("Image",imageUri.toString());
                 contactImage.setImageURI(data.getData());
             }
         }
@@ -124,8 +126,8 @@ public class MainActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    public  void addContact(String name,String phone, String email,String address){
-        contactDetailsList.add(new ContactDetail(name,phone,email,address));
+    public  void addContact(String name,String phone, String email,String address,Uri imageUri){
+        contactDetailsList.add(new ContactDetail(name,phone,email,address,imageUri));
     }
 
     public void populateListView(){
@@ -154,6 +156,9 @@ public class MainActivity extends AppCompatActivity {
 
             TextView address = (TextView) view.findViewById(R.id.listAddress);
             address.setText(currentContact.getAddress());
+
+            ImageView savedImage = (ImageView)view.findViewById(R.id.savedImage);
+            savedImage.setImageURI(currentContact.getImageuri());
 
             return view;
         }
