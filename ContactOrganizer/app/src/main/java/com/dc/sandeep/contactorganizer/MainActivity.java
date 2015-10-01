@@ -21,6 +21,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.dc.sandeep.contactorganizer.com.dc.beans.contact.ContactDetail;
+import com.dc.sandeep.contactorganizer.databaseImpl.DatabaseHandler;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,7 +32,9 @@ public class MainActivity extends AppCompatActivity {
     List<ContactDetail> contactDetailsList = new ArrayList<>();
     ListView contactListView;
     ImageView contactImage;
-    Uri imageUri;
+    Uri imageUri = Uri.parse("android.resourse://com.dc.sandeep.contactorganizer/drawable/abc_ic_menu_selectall_mtrl_alpha");
+    private static int contactId;
+    DatabaseHandler dbDatabaseHandler;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,6 +46,7 @@ public class MainActivity extends AppCompatActivity {
         addressTxt = (EditText)findViewById(R.id.address);
         contactListView = (ListView)findViewById(R.id.listView);
         contactImage = (ImageView)findViewById(R.id.imgId);
+        dbDatabaseHandler = new DatabaseHandler(getApplicationContext());
         TabHost tabHost = (TabHost)findViewById(R.id.tabHost);
         tabHost.setup();
         TabHost.TabSpec tabSpec = tabHost.newTabSpec("creator");
@@ -60,9 +64,7 @@ public class MainActivity extends AppCompatActivity {
         addContact.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                addContact(nametxt.getText().toString(),phoneTxt.getText().toString(),emailTxt.getText().toString(),addressTxt.getText().toString(),imageUri);
-                populateListView();
-                Toast.makeText(getApplicationContext(),"Contact has been created!",Toast.LENGTH_SHORT).show();
+                addContact(contactId++, nametxt.getText().toString(), phoneTxt.getText().toString(), emailTxt.getText().toString(), addressTxt.getText().toString(), imageUri);
             }
         });
 
@@ -89,9 +91,12 @@ public class MainActivity extends AppCompatActivity {
                 Intent intent = new Intent();
                 intent.setType("image/*");
                 intent.setAction(Intent.ACTION_GET_CONTENT);
-                startActivityForResult(Intent.createChooser(intent,"Select Image"),1);
+                startActivityForResult(Intent.createChooser(intent, "Select Image"), 1);
             }
         });
+
+            contactDetailsList.addAll(dbDatabaseHandler.getAllContacts());
+            populateListView();
     }
 
     public void onActivityResult(int reqCode,int resCode,Intent data){
@@ -126,8 +131,17 @@ public class MainActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    public  void addContact(String name,String phone, String email,String address,Uri imageUri){
-        contactDetailsList.add(new ContactDetail(name,phone,email,address,imageUri));
+    public  void addContact(int id,String name,String phone, String email,String address,Uri imageUri){
+        ContactDetail contactDetail = new ContactDetail(name,phone,email,address,imageUri);
+        contactDetail.setId(id);
+        if(!isContactExist(contactDetail)){
+            dbDatabaseHandler.insertContact(contactDetail);
+            contactDetailsList.add(contactDetail);
+            Toast.makeText(getApplicationContext(), "Contact has been created!", Toast.LENGTH_SHORT).show();
+        }else{
+            Toast.makeText(getApplicationContext(), "Contact already exist", Toast.LENGTH_SHORT).show();
+        }
+
     }
 
     public void populateListView(){
@@ -162,5 +176,9 @@ public class MainActivity extends AppCompatActivity {
 
             return view;
         }
+    }
+
+    private Boolean isContactExist(ContactDetail contactDetail){
+        return dbDatabaseHandler.getContact(contactDetail.getName()) != null ? true : false;
     }
 }

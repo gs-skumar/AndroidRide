@@ -15,6 +15,7 @@ public class ContactDetail {
     private Uri imageuri;
     private int id;
 
+    public ContactDetail(){}
     public ContactDetail(String name, String phone, String email, String address,Uri imageuri){
         this.name = name;
         this.phoneNo = phone;
