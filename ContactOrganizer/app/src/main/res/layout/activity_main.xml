@@ -50,7 +50,7 @@
                         android:layout_height="100dp"
                         android:id="@+id/imgId"
                         android:layout_weight="0.04"
-                        android:src="@drawable/abc_ic_menu_selectall_mtrl_alpha" />
+                        android:src="@drawable/abc_ic_menu_paste_mtrl_am_alpha" />
 
                     <EditText
                         android:layout_width="match_parent"

@@ -7,10 +7,12 @@ import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
+import android.view.ContextMenu;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
@@ -28,13 +30,18 @@ import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
 
+    private static final int EDIT = 0,DELETE = 1;
+
     EditText nametxt,emailTxt,phoneTxt,addressTxt;
     List<ContactDetail> contactDetailsList = new ArrayList<>();
     ListView contactListView;
     ImageView contactImage;
-    Uri imageUri = Uri.parse("android.resourse://com.dc.sandeep.contactorganizer/drawable/abc_ic_menu_selectall_mtrl_alpha");
+    Uri imageUri = Uri.parse("android.resourse://com.dc.sandeep.contactorganizer/drawable/abc_ic_menu_paste_mtrl_am_alpha");
     private static int contactId;
     DatabaseHandler dbDatabaseHandler;
+    int contactSelected;
+    ArrayAdapter<ContactDetail> contactDetailArrayAdapter;
+    private boolean isEditMode;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,7 +54,16 @@ public class MainActivity extends AppCompatActivity {
         contactListView = (ListView)findViewById(R.id.listView);
         contactImage = (ImageView)findViewById(R.id.imgId);
         dbDatabaseHandler = new DatabaseHandler(getApplicationContext());
-        TabHost tabHost = (TabHost)findViewById(R.id.tabHost);
+
+        registerForContextMenu(contactListView);
+        contactListView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+            @Override
+            public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
+                contactSelected = position;
+                return false;
+            }
+        });
+        final TabHost tabHost = (TabHost)findViewById(R.id.tabHost);
         tabHost.setup();
         TabHost.TabSpec tabSpec = tabHost.newTabSpec("creator");
         tabSpec.setContent(R.id.creatortab);
@@ -60,11 +76,26 @@ public class MainActivity extends AppCompatActivity {
         tabHost.addTab(tabSpec);
 
         final Button addContact = (Button)findViewById(R.id.submit);
-
         addContact.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                addContact(contactId++, nametxt.getText().toString(), phoneTxt.getText().toString(), emailTxt.getText().toString(), addressTxt.getText().toString(), imageUri);
+                if(isEditMode){
+                    ContactDetail newContactDetail = contactDetailsList.get(contactSelected);
+                    newContactDetail.setName(String.valueOf(nametxt.getText()));
+                    newContactDetail.setPhoneNo(String.valueOf(phoneTxt.getText()));
+                    newContactDetail.setEmail(String.valueOf(emailTxt.getText()));
+                    newContactDetail.setAddress(String.valueOf(addressTxt.getText()));
+                    newContactDetail.setImageuri(imageUri);
+                     dbDatabaseHandler.updateContact(newContactDetail);
+                    isEditMode = false;
+                    addContact.setText("ADD CONTACT");
+                    contactDetailArrayAdapter.notifyDataSetChanged();
+                    resetAddContactPanel();
+                    tabHost.setCurrentTab(1);
+                }else{
+                    addContact(contactId++, nametxt.getText().toString(), phoneTxt.getText().toString(), emailTxt.getText().toString(), addressTxt.getText().toString(), imageUri);
+                    contactDetailArrayAdapter.notifyDataSetChanged();
+                }
             }
         });
 
@@ -145,8 +176,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void populateListView(){
-        ArrayAdapter<ContactDetail> adapter = new ContactAdapter();
-        contactListView.setAdapter(adapter);
+        contactDetailArrayAdapter = new ContactAdapter();
+        contactListView.setAdapter(contactDetailArrayAdapter);
     }
     public class  ContactAdapter extends ArrayAdapter<ContactDetail>{
         public  ContactAdapter(){
@@ -178,7 +209,54 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    @Override
+    public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
+        super.onCreateContextMenu(menu, v, menuInfo);
+        menu.setHeaderIcon(R.drawable.edit_file);
+        menu.setHeaderTitle("Choose Edit Option.");
+        menu.add(Menu.NONE, EDIT, 1, "Edit Contact");
+        menu.add(Menu.NONE,DELETE,2,"Delete Contact");
+    }
+
+    @Override
+    public boolean onContextItemSelected(MenuItem item) {
+        switch (item.getItemId()){
+            case EDIT:
+               enableEditMode(contactDetailsList.get(contactSelected));
+                break;
+            case DELETE:
+                dbDatabaseHandler.deleteContact(contactDetailsList.get(contactSelected));
+                contactDetailsList.remove(contactSelected);
+                contactDetailArrayAdapter.notifyDataSetChanged();
+                break;
+        }
+
+        return super.onContextItemSelected(item);
+    }
+
     private Boolean isContactExist(ContactDetail contactDetail){
         return dbDatabaseHandler.getContact(contactDetail.getName()) != null ? true : false;
+    }
+
+    private void  enableEditMode(ContactDetail contactDetail){
+        TabHost tabHost = (TabHost)findViewById(R.id.tabHost);
+        tabHost.setCurrentTab(0);
+        nametxt.setText(contactDetail.getName());
+        phoneTxt.setText(contactDetail.getPhoneNo());
+        emailTxt.setText(contactDetail.getEmail());
+        addressTxt.setText(contactDetail.getAddress());
+        imageUri = contactDetail.getImageuri();
+        contactImage.setImageURI(imageUri);
+        Button edit = (Button)findViewById(R.id.submit);
+        edit.setText("Update");
+        isEditMode = true;
+    }
+
+    private void resetAddContactPanel(){
+        nametxt.setText("");
+        phoneTxt.setText("");
+        emailTxt.setText("");
+        addressTxt.setText("");
+        contactImage.setImageURI(Uri.parse("android.resourse://com.dc.sandeep.contactorganizer/abc_ic_menu_paste_mtrl_am_alpha"));
     }
 }

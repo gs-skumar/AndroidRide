@@ -35,7 +35,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
     @Override
     public void onCreate(SQLiteDatabase db) {
         String sql = "CREATE TABLE " + TABLE_CONTACT + " ( " + KEY_ID + " INTEGER PRIMARY KEY AUTOINCREMENT ," + KEY_NAME + " TEXT , " + KEY_PHONE + " TEXT ," + KEY_ADDRESS + " TEXT ," + KEY_EMAIL + " TEXT ," + KEY_IMAGE + " TEXT )";
-        System.out.println("SQL :: "+sql);
+        System.out.println("SQL :: " + sql);
         Log.e("SQL ", sql);
         db.execSQL(sql);
     }
@@ -99,15 +99,24 @@ public class DatabaseHandler extends SQLiteOpenHelper {
 
     public int updateContact(ContactDetail contactDetail){
 
+        int status=0;
         SQLiteDatabase db = getWritableDatabase();
-        ContentValues values = new ContentValues();
-        values.put(KEY_NAME,contactDetail.getName());
-        values.put(KEY_PHONE,contactDetail.getPhoneNo());
-        values.put(KEY_ADDRESS,contactDetail.getAddress());
-        values.put(KEY_EMAIL,contactDetail.getEmail());
-        values.put(KEY_IMAGE, contactDetail.getImageuri().toString());
+        try{
+            ContentValues values = new ContentValues();
+            values.put(KEY_NAME,contactDetail.getName());
+            values.put(KEY_PHONE,contactDetail.getPhoneNo());
+            values.put(KEY_ADDRESS,contactDetail.getAddress());
+            values.put(KEY_EMAIL, contactDetail.getEmail());
+            values.put(KEY_IMAGE, contactDetail.getImageuri().toString());
+            status = db.update(TABLE_CONTACT, values, KEY_ID + " =?", new String[]{String.valueOf(contactDetail.getId())});
+        }catch (Exception e){
+            e.printStackTrace();
+        }finally {
+            db.close();
+        }
 
-        return db.update(TABLE_CONTACT, values, KEY_ID + " =?", new String[]{String.valueOf(contactDetail.getId())});
+        return status;
+
     }
 
     public List<ContactDetail> getAllContacts(){
@@ -136,5 +145,18 @@ public class DatabaseHandler extends SQLiteOpenHelper {
             cursor.close();
             db.close();
         return contactDetailList;
+    }
+
+    public boolean deleteContact(ContactDetail contactDetail){
+        SQLiteDatabase db = getWritableDatabase();
+       try{
+           db.delete(TABLE_CONTACT,KEY_ID+" =? ",new String[]{String.valueOf(contactDetail.getId())});
+           db.close();
+           return true;
+       }catch (Exception e){
+           e.printStackTrace();
+           return false;
+       }
+
     }
 }
