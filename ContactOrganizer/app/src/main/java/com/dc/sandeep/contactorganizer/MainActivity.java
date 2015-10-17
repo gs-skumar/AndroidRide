@@ -8,8 +8,10 @@ import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.view.ContextMenu;
+import android.view.GestureDetector;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
@@ -23,6 +25,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.dc.sandeep.contactorganizer.com.dc.beans.contact.ContactDetail;
+import com.dc.sandeep.contactorganizer.com.dc.beans.contact.com.dc.MyGestureDetector;
 import com.dc.sandeep.contactorganizer.databaseImpl.DatabaseHandler;
 
 import java.util.ArrayList;
@@ -42,6 +45,7 @@ public class MainActivity extends AppCompatActivity {
     int contactSelected;
     ArrayAdapter<ContactDetail> contactDetailArrayAdapter;
     private boolean isEditMode;
+    private GestureDetector gestureDetector;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,6 +60,14 @@ public class MainActivity extends AppCompatActivity {
         dbDatabaseHandler = new DatabaseHandler(getApplicationContext());
 
         registerForContextMenu(contactListView);
+        contactListView.setOnTouchListener(new View.OnTouchListener() {
+            GestureDetector gestureDetector = new GestureDetector(new MyGestureDetector(MainActivity.this));
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                return  gestureDetector.onTouchEvent(event);
+            }
+        });
+
         contactListView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
             @Override
             public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
@@ -126,8 +138,9 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-            contactDetailsList.addAll(dbDatabaseHandler.getAllContacts());
-            populateListView();
+        contactDetailsList.addAll(dbDatabaseHandler.getAllContacts());
+        populateListView();
+        //gestureDetector = new GestureDetector(new MyGestureDetector(this));
     }
 
     public void onActivityResult(int reqCode,int resCode,Intent data){
@@ -259,4 +272,18 @@ public class MainActivity extends AppCompatActivity {
         addressTxt.setText("");
         contactImage.setImageURI(Uri.parse("android.resourse://com.dc.sandeep.contactorganizer/abc_ic_menu_paste_mtrl_am_alpha"));
     }
+
+    public void onLeftSwipe(){
+        Toast.makeText(getApplicationContext(), "Swiped Left!", Toast.LENGTH_SHORT).show();
+    }
+    public void onRightSwipe(){
+        Toast.makeText(getApplicationContext(), "Swiped Right!", Toast.LENGTH_SHORT).show();
+    }
+
+   /* @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        if(gestureDetector.onTouchEvent(event))
+            return true;
+        return super.onTouchEvent(event);
+    }*/
 }
