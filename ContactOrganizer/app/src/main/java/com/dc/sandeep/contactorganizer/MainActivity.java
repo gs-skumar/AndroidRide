@@ -59,15 +59,24 @@ public class MainActivity extends AppCompatActivity {
         contactImage = (ImageView)findViewById(R.id.imgId);
         dbDatabaseHandler = new DatabaseHandler(getApplicationContext());
 
-        registerForContextMenu(contactListView);
+       // registerForContextMenu(contactListView);
         contactListView.setOnTouchListener(new View.OnTouchListener() {
             GestureDetector gestureDetector = new GestureDetector(new MyGestureDetector(MainActivity.this));
+
             @Override
             public boolean onTouch(View v, MotionEvent event) {
-                return  gestureDetector.onTouchEvent(event);
+                return gestureDetector.onTouchEvent(event);
             }
         });
-
+/*
+        contactListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                contactSelected = position;
+                Log.e("Position", "" + position);
+            }
+        });
+      */
         contactListView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
             @Override
             public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
@@ -114,17 +123,13 @@ public class MainActivity extends AppCompatActivity {
         nametxt.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-
             }
-
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
                 addContact.setEnabled(!nametxt.getText().toString().trim().equals(""));
             }
-
             @Override
             public void afterTextChanged(Editable s) {
-
             }
         });
 
@@ -274,10 +279,14 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void onLeftSwipe(){
+        enableEditMode(contactDetailsList.get(contactSelected));
         Toast.makeText(getApplicationContext(), "Swiped Left!", Toast.LENGTH_SHORT).show();
     }
     public void onRightSwipe(){
-        Toast.makeText(getApplicationContext(), "Swiped Right!", Toast.LENGTH_SHORT).show();
+        Toast.makeText(getApplicationContext(), "Contact Deleted!", Toast.LENGTH_SHORT).show();
+        dbDatabaseHandler.deleteContact(contactDetailsList.get(contactSelected));
+        contactDetailsList.remove(contactSelected);
+        contactDetailArrayAdapter.notifyDataSetChanged();
     }
 
    /* @Override
